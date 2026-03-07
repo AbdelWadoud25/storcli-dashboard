@@ -848,17 +848,20 @@ else:
     for ctrl in ordered_ctrls:
         summaries.append(render_summary_for(ctrl, ctrl_index[ctrl]))
 
-    # Optional: export to Elasticsearch if configured
-    # Optional: export to Elasticsearch if configured
-if CONFIG.ES_URL:
+# Optional: export to Elasticsearch if configured
+# Treat whitespace-only values as "not set"
+_es_url = (CONFIG.ES_URL or "").strip()
+_es_api_key = (CONFIG.ES_API_KEY or "").strip()
+
+if _es_url:
     if st.button("📤 Send summary to Elasticsearch (experimental)"):
         try:
             import json, urllib.request
             payload = json.dumps({"summaries": summaries}).encode("utf-8")
             headers = {"Content-Type": "application/json"}
-            if CONFIG.ES_API_KEY:
-                headers["Authorization"] = f"ApiKey {CONFIG.ES_API_KEY}"
-            req = urllib.request.Request(CONFIG.ES_URL, data=payload, headers=headers)
+            if _es_api_key:
+                headers["Authorization"] = f"ApiKey { _es_api_key }"
+            req = urllib.request.Request(_es_url, data=payload, headers=headers)
             with urllib.request.urlopen(req, timeout=CONFIG.TIMEOUT_SEC) as resp:
                 st.success(f"Elasticsearch response: {resp.status}")
         except Exception as e:
