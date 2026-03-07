@@ -848,18 +848,23 @@ else:
     for ctrl in ordered_ctrls:
         summaries.append(render_summary_for(ctrl, ctrl_index[ctrl]))
 
-    # Optional: export to Elasticsearch if configured
-    if CONFIG.ES_URL:
+# Optional: export to Elasticsearch if configured
+# Treat whitespace-only values as "not set"
+_es_url = (CONFIG.ES_URL or "").strip()
+_es_api_key = (CONFIG.ES_API_KEY or "").strip()
+
+if _es_url:
+    if st.button("📤 Send summary to Elasticsearch (experimental)"):
         try:
-            import json
-            import urllib.request
+            import json, urllib.request
             payload = json.dumps({"summaries": summaries}).encode("utf-8")
-            req = urllib.request.Request(CONFIG.ES_URL, data=payload, headers={"Content-Type": "application/json", "Authorization": f"ApiKey {CONFIG.ES_API_KEY}"} if CONFIG.ES_API_KEY else {"Content-Type": "application/json"})
-            if st.button("📤 Send summary to Elasticsearch (experimental)"):
-                try:
-                    with urllib.request.urlopen(req, timeout=CONFIG.TIMEOUT_SEC) as resp:
-                        st.success(f"Elasticsearch response: {resp.status}")
-                except Exception as e:
-                    st.warning(f"Failed to send to Elasticsearch: {e}")
-        except Exception:
-            st.info("Elasticsearch export available: set STORCLI_ES_URL and (optionally) STORCLI_ES_API_KEY.")
+            headers = {"Content-Type": "application/json"}
+            if _es_api_key:
+                headers["Authorization"] = f"ApiKey { _es_api_key }"
+            req = urllib.request.Request(_es_url, data=payload, headers=headers)
+            with urllib.request.urlopen(req, timeout=CONFIG.TIMEOUT_SEC) as resp:
+                st.success(f"Elasticsearch response: {resp.status}")
+        except Exception as e:
+            st.warning(f"Failed to send to Elasticsearch: {e}")
+else:
+    st.info("Elasticsearch export available: set STORCLI_ES_URL and (optionally) STORCLI_ES_API_KEY.")
