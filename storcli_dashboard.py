@@ -595,7 +595,11 @@ if uploaded_zip:
                     if CONFIG.ENABLE_RAR and not RAR_AVAILABLE:
                         st.warning("RAR requested but dependencies missing. Install `rarfile` and system `unrar`/`bsdtar`.")
                     else:
-                        st.warning("RAR archives are not supported with Python stdlib. Enable experimental RAR by setting STORCLI_ENABLE_RAR=1 and installing `rarfile` + `unrar`.")
+                        st.warning(
+                            "RAR files are not supported in this tool. "
+                            "Please extract the .rar archive manually using WinRAR or 7-Zip, "
+                            "then upload the extracted .txt StorCLI log files to the app."
+                        )
             else:
                 with st.spinner("Extracting .zip (with nested zips)..."):
                     all_files.extend(_extract_txt_from_zip(raw_bytes))
